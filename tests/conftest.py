@@ -4,7 +4,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from banking_agent.config.settings import DISPUTE_READ_SCOPE, TRANSACTION_READ_SCOPE
+from banking_agent.config.settings import (
+    DISPUTE_READ_SCOPE,
+    DISPUTE_WRITE_SCOPE,
+    TRANSACTION_READ_SCOPE,
+)
 from banking_agent.models.dispute_record import DisputeRecord
 from banking_agent.models.transaction_record import TransactionRecord
 from banking_agent.models.verification_context import VerificationContext
@@ -18,8 +22,11 @@ def verified_context():
     return VerificationContext(
         session_id="demo-session-a",
         customer_id="demo-customer-a",
+        verification_reference="demo-verification-a",
         method="synthetic-app-confirmation",
-        permitted_actions=frozenset({TRANSACTION_READ_SCOPE, DISPUTE_READ_SCOPE}),
+        permitted_actions=frozenset(
+            {TRANSACTION_READ_SCOPE, DISPUTE_READ_SCOPE, DISPUTE_WRITE_SCOPE}
+        ),
         verified_at=NOW - timedelta(minutes=1),
         expires_at=NOW + timedelta(minutes=4),
     )

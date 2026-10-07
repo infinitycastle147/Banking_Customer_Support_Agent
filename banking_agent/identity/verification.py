@@ -23,6 +23,7 @@ def require_verified_session(
         not context.session_id
         or context.session_id != session_id
         or not context.customer_id
+        or not context.verification_reference
         or not context.method
         or action not in context.permitted_actions
         or context.verified_at > now

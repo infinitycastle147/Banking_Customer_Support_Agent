@@ -6,6 +6,7 @@ from datetime import datetime
 class VerificationContext:
     session_id: str
     customer_id: str
+    verification_reference: str
     method: str
     permitted_actions: frozenset[str]
     verified_at: datetime
