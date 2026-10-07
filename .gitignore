@@ -1,0 +1,24 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build and test output
+dist/
+build/
+coverage/
+.pytest_cache/
+
+# Editor and operating system files
+.DS_Store
+.vscode/
+.idea/
