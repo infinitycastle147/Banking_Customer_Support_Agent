@@ -1,0 +1,22 @@
+[project]
+name = "banking-customer-support-agent"
+version = "0.1.0"
+description = "Local pilot for source-grounded banking voice support"
+requires-python = ">=3.13"
+dependencies = [
+    "pipecat-ai[google,runner,webrtc]==1.8.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4,<10",
+    "ruff>=0.13,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
