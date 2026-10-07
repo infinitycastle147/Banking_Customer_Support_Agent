@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from banking_agent.models.voice_settings import VoiceSettings
@@ -18,6 +19,11 @@ PUBLIC_GUIDANCE_INSTRUCTION = (
     "verification and account tools are not connected. Do not imply "
     "a transfer or case was created. Keep spoken answers concise."
 )
+
+VERIFICATION_MAX_AGE = timedelta(minutes=5)
+TRANSACTION_READ_SCOPE = "transactions:read"
+DISPUTE_READ_SCOPE = "disputes:read"
+MAX_TRANSACTION_RESULTS = 20
 
 
 def load_voice_settings() -> VoiceSettings:

@@ -2,6 +2,8 @@
 
 Local browser pilot for public, source-grounded guidance. It has no customer verification, account access, dispute actions, staff routing, or production bank manual configured. See [the project plan](docs/project_plan.md) and [implementation plan](docs/implementation_plan.md) for the release boundary.
 
+The repository also contains an unconnected verified-read service for synthetic transactions and disputes. Its test records use INR, India time, fictional customer IDs, masked account references, and 12-digit payment references. The [NPCI complaint portal](https://www.npci.org.in/register-a-complaint) documents the 12-digit transaction number/RRN format and directs unauthorized-transaction complaints to the customer's bank. The five-minute verification ceiling here is a pilot safety setting, not a claim about Indian regulatory requirements or any bank's policy.
+
 ## Run locally
 
 Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline sends live speech to the configured provider. Do not use real customer data.
@@ -22,6 +24,7 @@ Run `uv run pytest`, `uv run ruff check .`, and `npm run build` in `frontend/`.
 
 - `banking_agent/config/`: provider and index settings.
 - `banking_agent/knowledge/`: approved public passage lookup.
+- `banking_agent/identity/` and `banking_agent/banking/`: scoped synthetic record reads, not connected to voice.
 - `banking_agent/models/`: source and result types.
 - `banking_agent/voice/`: Pipecat browser voice pipeline and public tool.
 - `frontend/`: local browser client.

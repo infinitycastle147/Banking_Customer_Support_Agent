@@ -1,0 +1,1 @@
+"""Narrow bank record reads."""
