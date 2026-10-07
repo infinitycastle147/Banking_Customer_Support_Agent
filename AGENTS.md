@@ -25,7 +25,7 @@ Apply these project and personal working rules when changing this repository.
 ## Version control
 
 - Do not commit or push unless explicitly asked.
-- Before a meaningful commit or merge, remind the user to run the `personal-standards-review` and `code-review` skills if they have not already reviewed the change.
+- Before a meaningful commit or merge, run the available `personal-standards-review` and `code-review` skills if they have not already reviewed the change. If either skill is unavailable, do not claim it was run: use the available review skill and perform a manual review of correctness and simplification for the missing review, then report the limitation.
 - Use a short commit subject prefixed with `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, or `perf`. Use bullets rather than a paragraph for any additional commit detail.
 
 ## Communication and judgment
