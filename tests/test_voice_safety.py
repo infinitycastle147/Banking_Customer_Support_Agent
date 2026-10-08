@@ -60,6 +60,8 @@ def test_approved_lookup_speaks_exact_passage_and_source():
             version="1.0",
             section="Demo help hours",
             effective_date=date(2026, 1, 1),
+            owner="Demo documentation owner",
+            source_hash="a" * 64,
         ),
         text="Fictional support hours are 09:00 to 17:00.",
         keywords=("support hours",),

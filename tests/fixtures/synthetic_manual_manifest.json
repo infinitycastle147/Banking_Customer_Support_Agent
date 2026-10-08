@@ -9,15 +9,12 @@
       "classification": "public",
       "effective_date": "2026-01-01",
       "expires_on": "2027-01-01",
+      "source_path": "synthetic_manual.md",
       "source_sha256": "d4a2657bd9cbc8ac3df2c2e57f2a41c809929eab601a915171e3f87b099e1ee8",
       "sections": [
         {
           "section": "Demo help hours",
-          "keywords": [
-            "support hours",
-            "help hours"
-          ],
-          "text": "In this fictional demo bank, general support hours are 09:00 to 17:00 on weekdays. This is sample guidance for testing and does not describe a real bank."
+          "keywords": ["support hours", "help hours"]
         }
       ]
     }

@@ -16,7 +16,9 @@ Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline se
 2. Run `uv sync` and `uv run --env-file /path/to/your/.env python -m banking_agent.voice.bot`.
 3. In `frontend/`, run `npm ci` and `npm run dev`, then open the local URL printed by Vite.
 
-`APPROVED_MANUAL_INDEX` is optional. If absent, all policy searches return unavailable. An index must contain only bank-approved public documents with `document_id`, `version`, `approval_status`, `classification`, `effective_date`, optional `expires_on`, and `sections` containing `section`, `keywords`, and bounded `text`. No sample is loaded by default.
+`APPROVED_MANUAL_INDEX` is optional. If absent, all policy searches return unavailable. An index must contain only bank-approved public documents with identity, owner, approver, version, source hash, classification, effective dates, and bounded sections. No sample is loaded by default.
+
+Build an index from an operator-approved Markdown manifest with `uv run python -m banking_agent.knowledge.ingest MANIFEST OUTPUT`. The manifest must also name the document owner, approver, source file, source SHA-256 hash, and approved sections. [The synthetic manifest](tests/fixtures/synthetic_manual_manifest.json) shows the format. Approval itself remains a bank process; this CLI checks the recorded approval and source integrity.
 
 For a local synthetic answer, set `APPROVED_MANUAL_INDEX=tests/fixtures/synthetic_manual_index.json` and ask about support hours. The fixture describes a fictional bank and must not be used as real bank policy.
 
@@ -27,7 +29,7 @@ Run `uv run pytest`, `uv run ruff check .`, and `npm run build` in `frontend/`.
 ## Structure
 
 - `banking_agent/config/`: provider and index settings.
-- `banking_agent/knowledge/`: approved public passage lookup.
+- `banking_agent/knowledge/`: approved Markdown ingestion and public passage lookup.
 - `banking_agent/identity/` and `banking_agent/banking/`: scoped synthetic record reads, not connected to voice.
 - `banking_agent/disputes/` and `migrations/`: local command service, transactional outbox, and worker.
 - `banking_agent/models/`: source and result types.

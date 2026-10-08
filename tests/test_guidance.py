@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from hashlib import sha256
 
 from banking_agent.knowledge.retrieval import (
     load_approved_passages,
@@ -11,13 +12,24 @@ def write_index(path, documents):
     path.write_text(json.dumps({"documents": documents}), encoding="utf-8")
 
 
-def document(*, text, status="approved", classification="public", expires=None):
+def document(
+    *,
+    text,
+    status="approved",
+    classification="public",
+    expires=None,
+    version="1",
+    effective_date="2026-01-01",
+):
     return {
         "document_id": "synthetic-handbook",
-        "version": "1",
+        "version": version,
         "approval_status": status,
         "classification": classification,
-        "effective_date": "2026-01-01",
+        "owner": "Demo documentation owner",
+        "approved_by": "Demo reviewer",
+        "source_sha256": sha256(text.encode()).hexdigest(),
+        "effective_date": effective_date,
         "expires_on": expires,
         "sections": [
             {
@@ -85,6 +97,28 @@ def test_conflicting_approved_passages_fail_closed(tmp_path):
 
     assert result.status == "conflict"
     assert result.passages == ()
+
+
+def test_same_guidance_uses_newest_effective_version(tmp_path):
+    path = tmp_path / "index.json"
+    write_index(
+        path,
+        [
+            document(text="Consistent demo guidance.", version="1"),
+            document(
+                text="Consistent demo guidance.",
+                version="2",
+                effective_date="2026-08-01",
+            ),
+        ],
+    )
+
+    result = search_approved_manual(
+        "support hours", load_approved_passages(path), today=date(2026, 10, 8)
+    )
+
+    assert result.status == "found"
+    assert result.passages[0].reference.version == "2"
 
 
 def test_no_index_has_no_guidance():

@@ -8,3 +8,5 @@ class SourceReference:
     version: str
     section: str
     effective_date: date
+    owner: str
+    source_hash: str
