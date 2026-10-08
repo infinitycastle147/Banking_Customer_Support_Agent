@@ -2,6 +2,8 @@
 
 Local browser pilot for public, source-grounded guidance. It has no customer verification, account access, dispute actions, staff routing, or production bank manual configured. See [the project plan](docs/project_plan.md) and [implementation plan](docs/implementation_plan.md) for the release boundary.
 
+The model routes a request to one of two public tools. Free-form model text is silenced before speech synthesis; the guidance tool speaks only the selected approved passage and its source, or a fixed unavailable message. Exact keyword retrieval is an intentionally narrow prototype and must be evaluated against authoritative bank manuals before real use.
+
 The repository also contains an unconnected verified-read service for synthetic transactions and disputes. Its test records use INR, India time, fictional customer IDs, masked account references, and 12-digit payment references. The [NPCI complaint portal](https://www.npci.org.in/register-a-complaint) documents the 12-digit transaction number/RRN format and directs unauthorized-transaction complaints to the customer's bank. The five-minute verification ceiling here is a pilot safety setting, not a claim about Indian regulatory requirements or any bank's policy.
 
 A local SQLite dispute service now accepts a typed request and outbox event in one transaction. Its worker records a pending human review case and preserves the dispute history. It has no public API, bank identity provider, reviewer action, or staff notification route. The `migrations/001_initial.sql` schema and `tests/test_dispute_commands.py` demonstrate the local flow. The rate limits and mutable states are pilot settings awaiting bank approval.
