@@ -7,7 +7,11 @@ from pipecat.processors.frame_processor import FrameDirection
 from banking_agent.models.manual_passage import ManualPassage
 from banking_agent.models.source_reference import SourceReference
 from banking_agent.voice.speech_gate import PublicSpeechGate
-from banking_agent.voice.tools import build_public_guidance_tool, build_unavailable_tool
+from banking_agent.voice.tools import (
+    build_capabilities_tool,
+    build_public_guidance_tool,
+    build_unavailable_tool,
+)
 
 
 class FakeLLM:
@@ -94,3 +98,16 @@ def test_missing_guidance_and_unsupported_request_use_fixed_messages():
     assert unsupported_call.result == {"status": "unavailable"}
     assert "cannot access accounts" in unsupported_call.llm.frames[0].text
     assert unsupported_call.properties.run_llm is False
+
+
+def test_capabilities_response_reflects_loaded_guidance():
+    empty_call = FakeCall({})
+    loaded_call = FakeCall({})
+
+    asyncio.run(build_capabilities_tool(False).handler(empty_call))
+    asyncio.run(build_capabilities_tool(True).handler(loaded_call))
+
+    assert "No approved bank guidance is loaded yet" in empty_call.llm.frames[0].text
+    assert "approved public guidance" in loaded_call.llm.frames[0].text
+    assert empty_call.result == {"status": "capabilities_explained"}
+    assert loaded_call.properties.run_llm is False

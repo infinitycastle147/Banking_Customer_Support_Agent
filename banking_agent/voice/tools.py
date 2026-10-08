@@ -53,8 +53,38 @@ def build_unavailable_tool() -> FunctionSchema:
 
     return FunctionSchema(
         name="explain_unavailable",
-        description="Speak the fixed unavailability message for account, transaction, dispute, identity, or other unsupported requests.",
+        description="Speak the fixed unavailability message for requests to access account, transaction, dispute, or identity data.",
         properties={},
         required=[],
         handler=explain_unavailable,
+    )
+
+
+def build_capabilities_tool(has_guidance: bool) -> FunctionSchema:
+    async def explain_capabilities(params: FunctionCallParams) -> None:
+        if has_guidance:
+            spoken = (
+                "I can answer questions from approved public guidance and cite the source. "
+                "I cannot access your account or process disputes in this pilot. "
+                "What public guidance would you like to ask about?"
+            )
+        else:
+            spoken = (
+                "This is a test of the voice interface. No approved bank guidance is "
+                "loaded yet, so I cannot answer bank policy questions in this session. "
+                "I also cannot access accounts or process disputes. For banking help, "
+                "please use your bank's official support channel."
+            )
+        await params.llm.push_frame(TTSSpeakFrame(spoken))
+        await params.result_callback(
+            {"status": "capabilities_explained"},
+            properties=FunctionCallResultProperties(run_llm=False),
+        )
+
+    return FunctionSchema(
+        name="explain_capabilities",
+        description="Explain this pilot's current capabilities for greetings, questions about its purpose, or frustration about its limits.",
+        properties={},
+        required=[],
+        handler=explain_capabilities,
     )
