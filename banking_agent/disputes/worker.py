@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+from banking_agent.audit.events import record_audit_event
 from banking_agent.config.settings import (
     OUTBOX_POLL_INTERVAL_SECONDS,
     PILOT_MUTABLE_DISPUTE_STATES,
@@ -133,6 +134,15 @@ class DisputeWorker:
                             result,
                             request["request_id"],
                         ),
+                    )
+                    record_audit_event(
+                        connection,
+                        event_name="disputes.request_processed"
+                        if result == "processed"
+                        else "disputes.request_rejected",
+                        request_id=request["request_id"],
+                        decision_code=result,
+                        created_at=now,
                     )
                 connection.execute(
                     "UPDATE outbox SET state = 'delivered' WHERE event_id = ?",

@@ -2,6 +2,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from banking_agent.audit.events import record_audit_event
 from banking_agent.config.settings import (
     CONSENT_MAX_AGE,
     DISPUTE_READ_SCOPE,
@@ -288,6 +289,13 @@ class DisputeCommandService:
                 connection.execute(
                     "INSERT INTO outbox (event_id, request_id, state) VALUES (?, ?, ?)",
                     (str(uuid4()), request_id, "pending"),
+                )
+                record_audit_event(
+                    connection,
+                    event_name="disputes.request_accepted",
+                    request_id=request_id,
+                    decision_code="accepted",
+                    created_at=now,
                 )
             return _outcome(
                 "accepted",

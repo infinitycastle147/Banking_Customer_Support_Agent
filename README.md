@@ -10,6 +10,8 @@ A local SQLite dispute service now accepts a typed request and outbox event in o
 
 Internal staff case reports now require a scoped staff context and separate the customer's statement from masked system facts and agent inference. A notification builder emits only priority, request reference, a generic summary, and an HTTPS case link. Delivery still needs a bank-approved staff channel.
 
+Request acceptance and worker decisions write dotted, redacted audit events in the same transaction as their state changes. Audit rows contain only event, request reference, decision code, and time.
+
 ## Run locally
 
 Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline sends live speech to the configured provider. Do not use real customer data.
@@ -35,6 +37,7 @@ Run `uv run pytest`, `uv run ruff check .`, and `npm run build` in `frontend/`.
 - `banking_agent/identity/` and `banking_agent/banking/`: scoped synthetic record reads, not connected to voice.
 - `banking_agent/disputes/` and `migrations/`: local command service, transactional outbox, and worker.
 - `banking_agent/cases/`: access-checked internal case reports and redacted notification payloads.
+- `banking_agent/audit/`: redacted request and worker decision events.
 - `banking_agent/models/`: source and result types.
 - `banking_agent/voice/`: Pipecat browser voice pipeline and public tool.
 - `frontend/`: local browser client.

@@ -178,6 +178,29 @@ def test_atomic_acceptance_worker_and_status(store, create_command, verified_con
     assert status.code == "accepted"
     assert status.request_state == "processed"
     assert "human review" in status.message
+    connection = store.connect()
+    try:
+        audit = connection.execute(
+            "SELECT event_name, decision_code, request_id FROM audit_events ORDER BY rowid"
+        ).fetchall()
+        assert [(row["event_name"], row["decision_code"]) for row in audit] == [
+            ("disputes.request_accepted", "accepted"),
+            ("disputes.request_processed", "processed"),
+        ]
+        assert {row["request_id"] for row in audit} == {outcome.request_id}
+        columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(audit_events)")
+        }
+        assert columns.isdisjoint(
+            {
+                "customer_id",
+                "customer_statement",
+                "masked_account",
+                "verification_reference",
+            }
+        )
+    finally:
+        connection.close()
 
 
 def test_retry_and_replay_do_not_duplicate_effects(
@@ -194,6 +217,13 @@ def test_retry_and_replay_do_not_duplicate_effects(
         connection.execute("UPDATE outbox SET state = 'pending'")
     assert DisputeWorker(store).process_one(now=NOW) == first.request_id
     assert counts(store) == (1, 1, 1, 1, 1)
+    connection = store.connect()
+    try:
+        assert (
+            connection.execute("SELECT COUNT(*) FROM audit_events").fetchone()[0] == 2
+        )
+    finally:
+        connection.close()
 
 
 def test_idempotency_key_cannot_be_reused_for_another_action(
@@ -278,6 +308,21 @@ def test_outbox_insert_failure_rolls_back_request(
     outcome = submit(store, create_command, verified_context)
     assert outcome.code == "temporarily_unavailable"
     assert outcome.retryable
+    assert counts(store) == (0, 0, 0, 0, 0)
+
+
+def test_audit_insert_failure_rolls_back_acceptance(
+    store, create_command, verified_context
+):
+    with store.transaction() as connection:
+        connection.execute(
+            "CREATE TRIGGER reject_audit BEFORE INSERT ON audit_events "
+            "BEGIN SELECT RAISE(ABORT, 'synthetic failure'); END"
+        )
+
+    outcome = submit(store, create_command, verified_context)
+
+    assert outcome.code == "temporarily_unavailable"
     assert counts(store) == (0, 0, 0, 0, 0)
 
 
@@ -384,6 +429,14 @@ def test_stale_amendment_is_rejected_by_worker(store, create_command, verified_c
     assert status.code == "stale_version"
     assert status.request_state == "rejected"
     assert counts(store) == (2, 2, 1, 1, 1)
+    connection = store.connect()
+    try:
+        rejected = connection.execute(
+            "SELECT decision_code FROM audit_events WHERE event_name = 'disputes.request_rejected'"
+        ).fetchone()
+        assert rejected["decision_code"] == "stale_version"
+    finally:
+        connection.close()
 
 
 def test_withdrawal_keeps_history_and_needs_human_review(
