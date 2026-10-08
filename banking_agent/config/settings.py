@@ -16,6 +16,7 @@ VERIFICATION_MAX_AGE = timedelta(minutes=5)
 TRANSACTION_READ_SCOPE = "transactions:read"
 DISPUTE_READ_SCOPE = "disputes:read"
 DISPUTE_WRITE_SCOPE = "disputes:write"
+CASES_READ_SCOPE = "cases:read"
 MAX_TRANSACTION_RESULTS = 20
 CONSENT_MAX_AGE = timedelta(minutes=2)
 PILOT_CUSTOMER_REQUEST_LIMIT_PER_HOUR = 5

@@ -27,9 +27,10 @@ class DisputeStore:
             connection.close()
 
     def initialize(self) -> None:
-        schema = Path(__file__).resolve().parents[2] / "migrations" / "001_initial.sql"
+        migrations = Path(__file__).resolve().parents[2] / "migrations"
         connection = self.connect()
         try:
-            connection.executescript(schema.read_text(encoding="utf-8"))
+            for schema in sorted(migrations.glob("*.sql")):
+                connection.executescript(schema.read_text(encoding="utf-8"))
         finally:
             connection.close()

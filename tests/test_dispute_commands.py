@@ -50,6 +50,20 @@ def seed_transaction(store, transaction_id, customer_id):
             "INSERT INTO synthetic_transactions (transaction_id, customer_id) VALUES (?, ?)",
             (transaction_id, customer_id),
         )
+        connection.execute(
+            "INSERT INTO synthetic_transaction_facts "
+            "(transaction_id, masked_account, merchant, amount, currency, status, occurred_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                transaction_id,
+                "XXXXXX1024",
+                "Sample Kirana Store",
+                "549.00",
+                "INR",
+                "posted",
+                NOW.isoformat(),
+            ),
+        )
 
 
 def submit(store, command, context, consent=None):

@@ -8,6 +8,8 @@ The repository also contains an unconnected verified-read service for synthetic 
 
 A local SQLite dispute service now accepts a typed request and outbox event in one transaction. Its worker records a pending human review case and preserves the dispute history. It has no public API, bank identity provider, reviewer action, or staff notification route. The `migrations/001_initial.sql` schema and `tests/test_dispute_commands.py` demonstrate the local flow. The rate limits and mutable states are pilot settings awaiting bank approval.
 
+Internal staff case reports now require a scoped staff context and separate the customer's statement from masked system facts and agent inference. A notification builder emits only priority, request reference, a generic summary, and an HTTPS case link. Delivery still needs a bank-approved staff channel.
+
 ## Run locally
 
 Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline sends live speech to the configured provider. Do not use real customer data.
@@ -32,6 +34,7 @@ Run `uv run pytest`, `uv run ruff check .`, and `npm run build` in `frontend/`.
 - `banking_agent/knowledge/`: approved Markdown ingestion and public passage lookup.
 - `banking_agent/identity/` and `banking_agent/banking/`: scoped synthetic record reads, not connected to voice.
 - `banking_agent/disputes/` and `migrations/`: local command service, transactional outbox, and worker.
+- `banking_agent/cases/`: access-checked internal case reports and redacted notification payloads.
 - `banking_agent/models/`: source and result types.
 - `banking_agent/voice/`: Pipecat browser voice pipeline and public tool.
 - `frontend/`: local browser client.
