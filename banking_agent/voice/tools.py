@@ -6,6 +6,23 @@ from banking_agent.knowledge.retrieval import search_approved_manual
 from banking_agent.models.manual_passage import ManualPassage
 
 
+def build_greeting_tool() -> FunctionSchema:
+    async def greet(params: FunctionCallParams) -> None:
+        await params.llm.push_frame(TTSSpeakFrame("Hello. How can I help?"))
+        await params.result_callback(
+            {"status": "greeted"},
+            properties=FunctionCallResultProperties(run_llm=False),
+        )
+
+    return FunctionSchema(
+        name="greet_customer",
+        description="Give a brief greeting when the customer only says hello.",
+        properties={},
+        required=[],
+        handler=greet,
+    )
+
+
 def build_public_guidance_tool(passages: tuple[ManualPassage, ...]) -> FunctionSchema:
     async def lookup(params: FunctionCallParams) -> None:
         query = (params.arguments or {}).get("query", "")
@@ -83,7 +100,7 @@ def build_capabilities_tool(has_guidance: bool) -> FunctionSchema:
 
     return FunctionSchema(
         name="explain_capabilities",
-        description="Explain this pilot's current capabilities for greetings, questions about its purpose, or frustration about its limits.",
+        description="Explain this pilot's current capabilities when asked about its purpose or limits.",
         properties={},
         required=[],
         handler=explain_capabilities,

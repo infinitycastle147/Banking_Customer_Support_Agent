@@ -9,6 +9,7 @@ from banking_agent.models.source_reference import SourceReference
 from banking_agent.voice.speech_gate import PublicSpeechGate
 from banking_agent.voice.tools import (
     build_capabilities_tool,
+    build_greeting_tool,
     build_public_guidance_tool,
     build_unavailable_tool,
 )
@@ -111,3 +112,13 @@ def test_capabilities_response_reflects_loaded_guidance():
     assert "approved public guidance" in loaded_call.llm.frames[0].text
     assert empty_call.result == {"status": "capabilities_explained"}
     assert loaded_call.properties.run_llm is False
+
+
+def test_simple_greeting_does_not_recite_capabilities():
+    call = FakeCall({})
+
+    asyncio.run(build_greeting_tool().handler(call))
+
+    assert call.llm.frames[0].text == "Hello. How can I help?"
+    assert call.result == {"status": "greeted"}
+    assert call.properties.run_llm is False

@@ -21,6 +21,7 @@ from banking_agent.voice.services import build_voice_services
 from banking_agent.voice.speech_gate import PublicSpeechGate
 from banking_agent.voice.tools import (
     build_capabilities_tool,
+    build_greeting_tool,
     build_public_guidance_tool,
     build_unavailable_tool,
 )
@@ -42,6 +43,7 @@ async def bot(runner_args: RunnerArguments) -> None:
     stt, llm, tts = build_voice_services(settings)
     context = LLMContext(
         tools=[
+            build_greeting_tool(),
             build_capabilities_tool(bool(passages)),
             build_public_guidance_tool(passages),
             build_unavailable_tool(),
@@ -79,17 +81,11 @@ async def bot(runner_args: RunnerArguments) -> None:
 
     @worker.rtvi.event_handler("on_client_ready")
     async def on_client_ready(_rtvi) -> None:
-        guidance_status = (
-            "You can ask about approved public guidance."
-            if passages
-            else "No approved bank guidance is loaded for this session."
-        )
         await tts.queue_frame(
             TTSSpeakFrame(
-                "This is a prototype with no bank account connection. Live speech "
-                "is processed by the configured voice provider. Please do not share "
-                "account numbers, passwords, card details, or one-time codes. "
-                f"{guidance_status}"
+                "Hello. This is a support prototype. Live speech is processed by "
+                "the configured voice provider. Please do not share passwords, "
+                "card details, or one-time codes. How can I help?"
             )
         )
 

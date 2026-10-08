@@ -2,7 +2,7 @@
 
 Local browser pilot for public, source-grounded guidance. It has no customer verification, account access, dispute actions, staff routing, or production bank manual configured. See [the project plan](docs/project_plan.md) and [implementation plan](docs/implementation_plan.md) for the release boundary.
 
-The model routes a request to one of three public tools. Free-form model text is silenced before speech synthesis; the guidance tool speaks only the selected approved passage and its source, or a fixed unavailable message. A separate fixed response explains the pilot's capabilities. Exact keyword retrieval is an intentionally narrow prototype and must be evaluated against authoritative bank manuals before real use.
+The model routes a request to one of four public tools. Free-form model text is silenced before speech synthesis; the guidance tool speaks only the selected approved passage and its source, or a fixed unavailable message. Separate fixed responses handle greetings and capability questions. Exact keyword retrieval is an intentionally narrow prototype and must be evaluated against authoritative bank manuals before real use.
 
 The repository also contains an unconnected verified-read service for synthetic transactions and disputes. Its test records use INR, India time, fictional customer IDs, masked account references, and 12-digit payment references. The [NPCI complaint portal](https://www.npci.org.in/register-a-complaint) documents the 12-digit transaction number/RRN format and directs unauthorized-transaction complaints to the customer's bank. The five-minute verification ceiling here is a pilot safety setting, not a claim about Indian regulatory requirements or any bank's policy.
 
@@ -20,11 +20,11 @@ Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline se
 2. Run `uv sync` and `uv run --env-file /path/to/your/.env python -m banking_agent.voice.bot`.
 3. In `frontend/`, run `npm ci` and `npm run dev`, then open the local URL printed by Vite.
 
-`APPROVED_MANUAL_INDEX` is optional. If absent, all policy searches return unavailable. An index must contain only bank-approved public documents with identity, owner, approver, version, source hash, classification, effective dates, and bounded sections. No sample is loaded by default.
+`APPROVED_MANUAL_INDEX` selects the public guidance index. The example env file points to a fictional test index; without the setting, all policy searches return unavailable. For real use, the index must contain only bank-approved public documents with identity, owner, approver, version, source hash, classification, effective dates, and bounded sections.
 
 Build an index from an operator-approved Markdown manifest with `uv run python -m banking_agent.knowledge.ingest MANIFEST OUTPUT`. The manifest must also name the document owner, approver, source file, source SHA-256 hash, and approved sections. [The synthetic manifest](tests/fixtures/synthetic_manual_manifest.json) shows the format. Approval itself remains a bank process; this CLI checks the recorded approval and source integrity.
 
-For a local synthetic answer, set `APPROVED_MANUAL_INDEX=tests/fixtures/synthetic_manual_index.json` and ask about support hours. The fixture describes a fictional bank and must not be used as real bank policy.
+With the example setting, ask about support hours for a local synthetic answer. The fixture describes a fictional bank and must not be used as real bank policy.
 
 ## Checks
 

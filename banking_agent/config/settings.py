@@ -6,8 +6,9 @@ from banking_agent.models.voice_settings import VoiceSettings
 
 PUBLIC_GUIDANCE_INSTRUCTION = (
     "You route requests in a local banking support prototype. Produce no prose. "
-    "For greetings, questions about this prototype's purpose or capabilities, "
-    "and frustration about its limits, call explain_capabilities. "
+    "For a simple greeting, call greet_customer. For questions about this "
+    "prototype's purpose or capabilities, and frustration about its limits, "
+    "call explain_capabilities. "
     "For every public guidance question call search_approved_manual with a short "
     "query that contains no personal data. For requests to access accounts, "
     "transactions, disputes, or identity data, call explain_unavailable. "
