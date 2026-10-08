@@ -10,4 +10,5 @@ class VoiceSettings:
     tts_model: str
     tts_voice: str
     approved_manual_index: Path | None
+    demo_db_path: Path
     system_instruction: str

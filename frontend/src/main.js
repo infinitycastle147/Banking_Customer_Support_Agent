@@ -1,21 +1,25 @@
 import { PipecatClient, RTVIEvent } from '@pipecat-ai/client-js';
 import { SmallWebRTCTransport } from '@pipecat-ai/small-webrtc-transport';
+import { Clerk } from '@clerk/clerk-js';
+import { ui } from '@clerk/ui';
 import './style.css';
 
 document.querySelector('#app').innerHTML = `
   <div class="shell">
     <header class="topbar">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><span>HARBOR <small>SUPPORT PILOT</small></span></div>
-      <span class="environment"><i></i> LOCAL PROTOTYPE</span>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><span>HARBOR <small>SUPPORT</small></span></div>
+      <div id="userButton" class="user-button"></div>
     </header>
-    <main>
-      <div class="eyebrow"><span>01 / VOICE GUIDANCE</span><span>PUBLIC INFORMATION ONLY</span></div>
+    <section id="authPanel" class="auth-panel" aria-label="Sign in"></section>
+    <main id="mainContent" hidden>
+      <div class="eyebrow"><span>HARBOR SUPPORT</span><span>YOUR ACTIVITY AND GUIDANCE</span></div>
       <div class="content">
         <section class="intro">
           <p class="overline">A clearer way forward</p>
           <h1>Start with<br/><em>a conversation.</em></h1>
-          <p class="lead">Ask about approved public guidance. This pilot has no access to accounts, transactions, or disputes.</p>
-          <div class="notice"><span class="notice-icon" aria-hidden="true">i</span><p>Live speech is sent to the configured voice provider during a session. Please do not share account numbers, passwords, card details, or one-time codes. No transcript is saved by this browser.</p></div>
+          <p class="lead">Ask about your recent activity or public banking guidance.</p>
+          <div class="notice"><span class="notice-icon" aria-hidden="true">i</span><p>This demonstration shows sample activity linked to your sign-in. It is not connected to a bank account. Live speech is sent to the configured voice provider. Please do not share passwords, card details, or one-time codes.</p></div>
+          <div class="activity"><h2>Recent activity</h2><div id="activityList" class="activity-list">Loading activity…</div></div>
         </section>
         <section class="call-panel" aria-label="Voice session">
           <div class="panel-top"><span>LIVE SESSION</span><span id="statusBadge" class="status-badge">OFFLINE</span></div>
@@ -27,7 +31,7 @@ document.querySelector('#app').innerHTML = `
         </section>
       </div>
     </main>
-    <footer><span>HARBOR / CUSTOMER SUPPORT</span><span>Prototype for local evaluation · No bank connection</span></footer>
+    <footer><span>HARBOR / CUSTOMER SUPPORT</span><span>Sample activity for demonstration</span></footer>
   </div>
 `;
 
@@ -43,6 +47,63 @@ let connected = false;
 let connecting = false;
 let muted = false;
 let startedAt = 0;
+let clerk;
+let currentUserId = null;
+
+async function authenticatedFetch(path, options = {}) {
+  const token = await clerk.session?.getToken();
+  if (!token) throw new Error('Please sign in again.');
+  const response = await fetch(path, {
+    ...options,
+    headers: { ...options.headers, Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(response.status === 401 ? 'Please sign in again.' : 'The service is unavailable.');
+  return response.json();
+}
+
+async function loadActivity() {
+  const list = document.getElementById('activityList');
+  try {
+    const { transactions } = await authenticatedFetch('/api/transactions');
+    list.replaceChildren();
+    for (const transaction of transactions) {
+      const row = document.createElement('div');
+      row.className = 'activity-row';
+      const details = document.createElement('span');
+      details.textContent = `${transaction.merchant} · ${new Date(transaction.occurred_at).toLocaleDateString()}`;
+      const amount = document.createElement('strong');
+      amount.textContent = `${transaction.currency} ${transaction.amount}`;
+      row.append(details, amount);
+      list.append(row);
+    }
+  } catch (error) {
+    list.textContent = error.message;
+  }
+}
+
+async function renderSession() {
+  const userId = clerk.user?.id;
+  if (userId === currentUserId) return;
+  currentUserId = userId;
+  const authPanel = document.getElementById('authPanel');
+  const main = document.getElementById('mainContent');
+  const userButton = document.getElementById('userButton');
+  if (userId) {
+    authPanel.replaceChildren();
+    authPanel.hidden = true;
+    main.hidden = false;
+    clerk.mountUserButton(userButton);
+    await loadActivity();
+  } else {
+    if (client && (connected || connecting)) await client.disconnect().catch(() => {});
+    resetConnection();
+    main.hidden = true;
+    userButton.replaceChildren();
+    authPanel.hidden = false;
+    authPanel.innerHTML = '<h1>Welcome to Harbor Support</h1><p>Sign in to view your activity and start a conversation.</p><div id="signIn"></div>';
+    clerk.mountSignIn(document.getElementById('signIn'));
+  }
+}
 
 function setStatus(title, hint, mode = '') {
   elements.callStatus.textContent = title;
@@ -72,6 +133,7 @@ function resetConnection() {
 
 async function toggleConnection() {
   if (connecting) return;
+  if (!clerk?.user) return;
   if (connected) {
     await client.disconnect();
     return;
@@ -96,12 +158,12 @@ async function toggleConnection() {
         elements.connectButton.textContent = 'End conversation';
         elements.muteButton.disabled = false;
         elements.statusBadge.textContent = 'CONNECTED';
-        setStatus('Connected', 'Ask a public guidance question.', 'active');
+        setStatus('Connected', 'Ask about your activity or banking guidance.', 'active');
       },
       onDisconnected: resetConnection,
-      onBotReady: () => setStatus('Listening', 'Ask a public guidance question.', 'active'),
+      onBotReady: () => setStatus('Listening', 'Ask about your activity or banking guidance.', 'active'),
       onUserStartedSpeaking: () => setStatus('Listening', 'Take your time.', 'listening'),
-      onUserStoppedSpeaking: () => setStatus('Preparing an answer', 'Checking available guidance.', 'working'),
+      onUserStoppedSpeaking: () => setStatus('Preparing an answer', 'Checking your request.', 'working'),
       onBotStartedSpeaking: () => setStatus('Speaking', 'You can interrupt at any time.', 'speaking'),
       onBotStoppedSpeaking: () => setStatus('Listening', 'Ask another question.', 'active'),
       onError: showError,
@@ -117,9 +179,10 @@ async function toggleConnection() {
   });
 
   try {
+    const { ticket } = await authenticatedFetch('/api/voice-tickets', { method: 'POST' });
     await client.startBotAndConnect({
       endpoint: '/start',
-      requestData: { transport: 'webrtc', createDailyRoom: false, enableDefaultIceServers: true },
+      requestData: { transport: 'webrtc', createDailyRoom: false, enableDefaultIceServers: true, body: { voice_ticket: ticket } },
     });
   } catch (error) {
     await client.disconnect().catch(() => {});
@@ -141,3 +204,17 @@ setInterval(() => {
   const seconds = Math.floor((Date.now() - startedAt) / 1000);
   elements.elapsed.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }, 1000);
+
+const publishableKey = import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+if (publishableKey) {
+  clerk = new Clerk(publishableKey);
+  clerk.load({
+    ui,
+    localization: { signIn: { start: { title: 'Sign in' } } },
+  }).then(() => {
+    clerk.addListener(() => renderSession().catch(showError));
+    renderSession().catch(showError);
+  }).catch(showError);
+} else {
+  document.getElementById('authPanel').textContent = 'Sign-in configuration is missing.';
+}

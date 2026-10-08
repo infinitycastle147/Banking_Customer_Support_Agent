@@ -1,7 +1,7 @@
 {
   "documents": [
     {
-      "document_id": "synthetic-demo-handbook",
+      "document_id": "harbor-general-guide",
       "version": "1.0",
       "owner": "Demo documentation owner",
       "approved_by": "Demo reviewer",
@@ -9,15 +9,35 @@
       "classification": "public",
       "effective_date": "2026-01-01",
       "expires_on": "2027-01-01",
-      "source_sha256": "d4a2657bd9cbc8ac3df2c2e57f2a41c809929eab601a915171e3f87b099e1ee8",
+      "source_sha256": "f6d5cb028ab97b07f09015b3de98193a070da1b0142e376937b3d2a74f654c0c",
       "sections": [
         {
-          "section": "Demo help hours",
+          "section": "Support hours",
           "keywords": [
             "support hours",
             "help hours"
           ],
-          "text": "In this fictional demo bank, general support hours are 09:00 to 17:00 on weekdays. This is sample guidance for testing and does not describe a real bank."
+          "text": "Please use your bank's official support channel for its current support hours."
+        },
+        {
+          "section": "Writing a cheque",
+          "keywords": [
+            "write cheque",
+            "fill cheque",
+            "write check",
+            "fill check",
+            "cheque writing",
+            "check writing"
+          ],
+          "text": "For a typical cheque in India, write the date, the payee's name, and the amount in both figures and words. Make sure the two amounts match, then sign in the designated space with your registered signature. Write clearly and avoid leaving space where extra words or figures could be added. Follow the instructions on your bank's cheque leaf."
+        },
+        {
+          "section": "Cheque number",
+          "keywords": [
+            "cheque number",
+            "check number"
+          ],
+          "text": "The cheque number identifies a particular cheque leaf. It is usually a preprinted six-digit number near the bottom of the cheque. It is different from your account number and the MICR code. Check the layout of your own cheque leaf before quoting it."
         }
       ]
     }

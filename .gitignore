@@ -17,6 +17,7 @@ dist/
 build/
 coverage/
 .pytest_cache/
+.local/
 
 # Editor and operating system files
 .DS_Store

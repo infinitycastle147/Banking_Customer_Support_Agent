@@ -97,7 +97,7 @@ def test_missing_guidance_and_unsupported_request_use_fixed_messages():
     assert lookup_call.result == {"status": "missing"}
     assert "Approved guidance is unavailable" in lookup_call.llm.frames[0].text
     assert unsupported_call.result == {"status": "unavailable"}
-    assert "cannot access accounts" in unsupported_call.llm.frames[0].text
+    assert "can't access that information" in unsupported_call.llm.frames[0].text
     assert unsupported_call.properties.run_llm is False
 
 
@@ -108,8 +108,8 @@ def test_capabilities_response_reflects_loaded_guidance():
     asyncio.run(build_capabilities_tool(False).handler(empty_call))
     asyncio.run(build_capabilities_tool(True).handler(loaded_call))
 
-    assert "No approved bank guidance is loaded yet" in empty_call.llm.frames[0].text
-    assert "approved public guidance" in loaded_call.llm.frames[0].text
+    assert "Public guidance is unavailable" in empty_call.llm.frames[0].text
+    assert "public guidance" in loaded_call.llm.frames[0].text
     assert empty_call.result == {"status": "capabilities_explained"}
     assert loaded_call.properties.run_llm is False
 

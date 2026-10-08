@@ -1,6 +1,7 @@
 import json
 from datetime import date
 from hashlib import sha256
+from pathlib import Path
 
 from banking_agent.knowledge.retrieval import (
     load_approved_passages,
@@ -126,3 +127,16 @@ def test_no_index_has_no_guidance():
         search_approved_manual("support hours", load_approved_passages(None)).status
         == "missing"
     )
+
+
+def test_sample_cheque_guidance_covers_writing_and_number():
+    path = Path(__file__).parent / "fixtures" / "synthetic_manual_index.json"
+    passages = load_approved_passages(path)
+
+    writing = search_approved_manual("how to fill a check", passages)
+    number = search_approved_manual("where is the cheque number", passages)
+
+    assert writing.status == "found"
+    assert writing.passages[0].reference.section == "Writing a cheque"
+    assert number.status == "found"
+    assert number.passages[0].reference.section == "Cheque number"

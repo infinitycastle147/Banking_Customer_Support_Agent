@@ -1,30 +1,20 @@
-# Banking customer support voice pilot
+# Harbor Support
 
-Local browser pilot for public, source-grounded guidance. It has no customer verification, account access, dispute actions, staff routing, or production bank manual configured. See [the project plan](docs/project_plan.md) and [implementation plan](docs/implementation_plan.md) for the release boundary.
-
-The model routes a request to one of four public tools. Free-form model text is silenced before speech synthesis; the guidance tool speaks only the selected approved passage and its source, or a fixed unavailable message. Separate fixed responses handle greetings and capability questions. Exact keyword retrieval is an intentionally narrow prototype and must be evaluated against authoritative bank manuals before real use.
-
-The repository also contains an unconnected verified-read service for synthetic transactions and disputes. Its test records use INR, India time, fictional customer IDs, masked account references, and 12-digit payment references. The [NPCI complaint portal](https://www.npci.org.in/register-a-complaint) documents the 12-digit transaction number/RRN format and directs unauthorized-transaction complaints to the customer's bank. The five-minute verification ceiling here is a pilot safety setting, not a claim about Indian regulatory requirements or any bank's policy.
-
-A local SQLite dispute service now accepts a typed request and outbox event in one transaction. Its worker records a pending human review case and preserves the dispute history. It has no public API, bank identity provider, reviewer action, or staff notification route. The `migrations/001_initial.sql` schema and `tests/test_dispute_commands.py` demonstrate the local flow. The rate limits and mutable states are pilot settings awaiting bank approval.
-
-Internal staff case reports now require a scoped staff context and separate the customer's statement from masked system facts and agent inference. A notification builder emits only priority, request reference, a generic summary, and an HTTPS case link. Delivery still needs a bank-approved staff channel.
-
-Request acceptance and worker decisions write dotted, redacted audit events in the same transaction as their state changes. Audit rows contain only event, request reference, decision code, and time.
+Browser voice support with Clerk sign-in, customer-scoped sample transaction activity, and source-grounded public guidance. The activity is generated for demonstration and is not connected to a bank. Dispute submission and real account access are not available.
 
 ## Run locally
 
-Requires Python 3.13, `uv`, Node.js, and a Gemini API key. The voice pipeline sends live speech to the configured provider. Do not use real customer data.
+Requires Python 3.13, `uv`, Node.js, a Gemini API key, and Clerk publishable and secret keys from the same Clerk application.
 
-1. Provide `GEMINI_API_KEY` in an untracked env file. A reference project's env file can be passed directly to `uv run --env-file` without copying its contents into this repository.
-2. Run `uv sync` and `uv run --env-file /path/to/your/.env python -m banking_agent.voice.bot`.
-3. In `frontend/`, run `npm ci` and `npm run dev`, then open the local URL printed by Vite.
+1. Copy `.env.example` to `.env`. Set `GEMINI_API_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY`. Set `CLERK_AUTHORIZED_PARTIES` to the exact browser origin you use, such as `http://127.0.0.1:5173`. Keep `.env` untracked.
+2. Run `UV_CACHE_DIR=/private/tmp/banking-agent-uv-cache uv sync`.
+3. Start the API: `uv run --env-file .env uvicorn banking_agent.banking.api:app --host 127.0.0.1 --port 8000`.
+4. Start the voice runner in another terminal: `uv run --env-file .env python -m banking_agent.voice.bot`.
+5. In `frontend/`, run `npm ci` and `npm run dev`, then open the Vite URL. Vite reads the root `.env` and exposes the Clerk publishable key, but not the secret, to the browser.
 
-`APPROVED_MANUAL_INDEX` selects the public guidance index. The example env file points to a fictional test index; without the setting, all policy searches return unavailable. For real use, the index must contain only bank-approved public documents with identity, owner, approver, version, source hash, classification, effective dates, and bounded sections.
+The browser sends a Clerk session token only to the API. The API verifies it, creates records scoped to that Clerk user, and issues a one-use voice ticket valid for up to 30 seconds. The voice runner redeems the ticket and checks the resulting read scope, valid for up to five minutes, before speaking any transaction details. API lookups also check customer ownership. Never use real customer data in this demo.
 
-Build an index from an operator-approved Markdown manifest with `uv run python -m banking_agent.knowledge.ingest MANIFEST OUTPUT`. The manifest must also name the document owner, approver, source file, source SHA-256 hash, and approved sections. [The synthetic manifest](tests/fixtures/synthetic_manual_manifest.json) shows the format. Approval itself remains a bank process; this CLI checks the recorded approval and source integrity.
-
-With the example setting, ask about support hours for a local synthetic answer. The fixture describes a fictional bank and must not be used as real bank policy.
+The configured `APPROVED_MANUAL_INDEX` points to a test handbook. It covers basic cheque guidance and directs support-hours questions to the bank's official channel; its approval metadata is only for testing. Replace it with bank-reviewed public documents before using the guidance for a real bank. The voice system speaks only retrieved passages and fixed responses.
 
 ## Checks
 
@@ -32,13 +22,11 @@ Run `uv run pytest`, `uv run ruff check .`, and `npm run build` in `frontend/`.
 
 ## Structure
 
-- `banking_agent/config/`: provider and index settings.
-- `banking_agent/knowledge/`: approved Markdown ingestion and public passage lookup.
-- `banking_agent/identity/` and `banking_agent/banking/`: scoped synthetic record reads, not connected to voice.
-- `banking_agent/disputes/` and `migrations/`: local command service, transactional outbox, and worker.
-- `banking_agent/cases/`: access-checked internal case reports and redacted notification payloads.
-- `banking_agent/audit/`: redacted request and worker decision events.
-- `banking_agent/models/`: source and result types.
-- `banking_agent/voice/`: Pipecat browser voice pipeline and public tool.
-- `frontend/`: local browser client.
-- `tests/`: guidance boundary tests.
+- `banking_agent/banking/`: scoped transaction reads, sample record store, and authenticated API.
+- `banking_agent/identity/`: Clerk session verification and read authorization.
+- `banking_agent/knowledge/`: public document ingestion and lookup.
+- `banking_agent/voice/`: Pipecat browser voice pipeline and typed tools.
+- `banking_agent/disputes/`, `banking_agent/cases/`, `banking_agent/audit/`, `migrations/`: local dispute workflow and staff artifacts, not connected to the browser.
+- `banking_agent/models/`: shared data types.
+- `frontend/`: Clerk sign-in, sample activity, and voice client.
+- `tests/`: service and access-boundary tests.

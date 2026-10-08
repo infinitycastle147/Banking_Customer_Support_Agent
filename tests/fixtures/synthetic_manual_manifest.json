@@ -1,7 +1,7 @@
 {
   "documents": [
     {
-      "document_id": "synthetic-demo-handbook",
+      "document_id": "harbor-general-guide",
       "version": "1.0",
       "owner": "Demo documentation owner",
       "approved_by": "Demo reviewer",
@@ -10,11 +10,32 @@
       "effective_date": "2026-01-01",
       "expires_on": "2027-01-01",
       "source_path": "synthetic_manual.md",
-      "source_sha256": "d4a2657bd9cbc8ac3df2c2e57f2a41c809929eab601a915171e3f87b099e1ee8",
+      "source_sha256": "f6d5cb028ab97b07f09015b3de98193a070da1b0142e376937b3d2a74f654c0c",
       "sections": [
         {
-          "section": "Demo help hours",
-          "keywords": ["support hours", "help hours"]
+          "section": "Support hours",
+          "keywords": [
+            "support hours",
+            "help hours"
+          ]
+        },
+        {
+          "section": "Writing a cheque",
+          "keywords": [
+            "write cheque",
+            "fill cheque",
+            "write check",
+            "fill check",
+            "cheque writing",
+            "check writing"
+          ]
+        },
+        {
+          "section": "Cheque number",
+          "keywords": [
+            "cheque number",
+            "check number"
+          ]
         }
       ]
     }

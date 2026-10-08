@@ -10,12 +10,16 @@ PUBLIC_GUIDANCE_INSTRUCTION = (
     "prototype's purpose or capabilities, and frustration about its limits, "
     "call explain_capabilities. "
     "For every public guidance question call search_approved_manual with a short "
-    "query that contains no personal data. For requests to access accounts, "
-    "transactions, disputes, or identity data, call explain_unavailable. "
+    "query that contains no personal data. For requests to review transactions, "
+    "call list_my_transactions when available; otherwise call explain_unavailable. "
+    "For requests to access account balances, disputes, or identity data, "
+    "call explain_unavailable. "
     "Never ask for names, account numbers, passwords, card details, or one-time codes."
 )
 
 VERIFICATION_MAX_AGE = timedelta(minutes=5)
+VOICE_TICKET_MAX_AGE = timedelta(seconds=30)
+DEFAULT_DEMO_DB_PATH = Path(".local/demo.sqlite3")
 TRANSACTION_READ_SCOPE = "transactions:read"
 DISPUTE_READ_SCOPE = "disputes:read"
 DISPUTE_WRITE_SCOPE = "disputes:write"
@@ -45,5 +49,6 @@ def load_voice_settings() -> VoiceSettings:
         tts_model=os.getenv("GEMINI_TTS_MODEL", "gemini-3.1-flash-tts-preview"),
         tts_voice=os.getenv("GEMINI_TTS_VOICE", "Kore"),
         approved_manual_index=Path(index_path) if index_path else None,
+        demo_db_path=Path(os.getenv("DEMO_DB_PATH", str(DEFAULT_DEMO_DB_PATH))),
         system_instruction=PUBLIC_GUIDANCE_INSTRUCTION,
     )

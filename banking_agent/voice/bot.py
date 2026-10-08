@@ -15,6 +15,7 @@ from pipecat.runner.utils import create_transport
 from pipecat.transports.base_transport import TransportParams
 from pipecat.workers.runner import WorkerRunner
 
+from banking_agent.banking.demo_store import DemoStore
 from banking_agent.config.settings import load_voice_settings
 from banking_agent.knowledge.retrieval import load_approved_passages
 from banking_agent.voice.services import build_voice_services
@@ -23,6 +24,7 @@ from banking_agent.voice.tools import (
     build_capabilities_tool,
     build_greeting_tool,
     build_public_guidance_tool,
+    build_transaction_tool,
     build_unavailable_tool,
 )
 
@@ -32,6 +34,10 @@ logger = logging.getLogger(__name__)
 async def bot(runner_args: RunnerArguments) -> None:
     settings = load_voice_settings()
     passages = load_approved_passages(settings.approved_manual_index)
+    body = runner_args.body if isinstance(runner_args.body, dict) else {}
+    ticket = body.get("voice_ticket", "")
+    store = DemoStore(settings.demo_db_path)
+    verified_context = store.redeem_voice_ticket(ticket)
     transport = await create_transport(
         runner_args,
         {
@@ -41,14 +47,15 @@ async def bot(runner_args: RunnerArguments) -> None:
         },
     )
     stt, llm, tts = build_voice_services(settings)
-    context = LLMContext(
-        tools=[
-            build_greeting_tool(),
-            build_capabilities_tool(bool(passages)),
-            build_public_guidance_tool(passages),
-            build_unavailable_tool(),
-        ]
-    )
+    tools = [
+        build_greeting_tool(),
+        build_capabilities_tool(bool(passages), verified_context is not None),
+        build_public_guidance_tool(passages),
+        build_unavailable_tool(),
+    ]
+    if verified_context:
+        tools.append(build_transaction_tool(store, verified_context))
+    context = LLMContext(tools=tools)
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,
         user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer()),
@@ -82,11 +89,7 @@ async def bot(runner_args: RunnerArguments) -> None:
     @worker.rtvi.event_handler("on_client_ready")
     async def on_client_ready(_rtvi) -> None:
         await tts.queue_frame(
-            TTSSpeakFrame(
-                "Hello. This is a support prototype. Live speech is processed by "
-                "the configured voice provider. Please do not share passwords, "
-                "card details, or one-time codes. How can I help?"
-            )
+            TTSSpeakFrame("Welcome to Harbor Support. How can I help?")
         )
 
     @transport.event_handler("on_client_connected")
